@@ -1,8 +1,13 @@
+import { calculateIRPF } from "./assets/irpf";
 import { calculatePSS } from "./assets/pss";
 
 function App() {
 
-  console.log(calculatePSS(3078.47));
+  const salary = 3078.37
+  const pss = calculatePSS(salary);
+  const irrf = calculateIRPF(salary - pss, 2);
+
+  console.log(irrf);
 
   return (
     <div>
