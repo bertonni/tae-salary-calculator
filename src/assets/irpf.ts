@@ -1,58 +1,37 @@
-const irpfTable = [
-  { range: 1, from: 0, to: 1903.98, percent: 0, discount: 0 },
-  { range: 2, from: 1903.99, to: 2826.65, percent: 0.075, discount: 142.8 },
-  { range: 3, from: 2826.66, to: 3751.05, percent: 0.15, discount: 354.8 },
-  { range: 4, from: 3751.06, to: 4664.68, percent: 0.225, discount: 636.13 },
-  { range: 5, from: 4664.69, to: 999999.99, percent: 0.275, discount: 869.36 },
-];
+/**
+ * Calcula imposto de renda dado valor rendimentos tributavel conforme tabela progressiva
+ *
+ * @params {Number} rendimentos Renda a ser tributada, em R$.
+ * @returns {number} imposto a pagar sobre `rendimentos`, em R$.
+ **/
+export const IRRF = (rendimentos: number): number => {
+  // Fonte: https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/tributos/irpf-imposto-de-renda-pessoa-fisica#tabelas-de-incid-ncia-mensal
+  const aliquotas = [0, 0.075, 0.15, 0.225, 0.275]; // aliquotas de IR
+  const bases = [1903.98, 2826.65, 3751.05, 4664.68, Infinity]; // bases de calculo
 
-const discountPerDependent = 189.59;
+  // calcula tamanho das faixas de tributacao conforme rendimentos
+  const faixas = bases.map((b, i, arr) => {
+    // a faixa atual eh no maximo o valor da base de calculo
+    let faixa = Math.min(rendimentos, b);
 
-export const calculateIRPF = (baseValue: number, numberOfDependents = 0) => {
-  let discount = 0;
-  let currentRange = 1;
-
-  const newBaseValue = baseValue - (numberOfDependents * discountPerDependent);
-
-  if (newBaseValue < irpfTable[0].to) return 0;
-
-  for (let i = 1; i < irpfTable.length; i++) {
-    if (newBaseValue >= irpfTable[i].from) {
-      currentRange = i;
-      console.log('range', currentRange)
-      if (newBaseValue <= irpfTable[i].to) {
-        discount +=
-          i === 1
-            ? parseFloat((newBaseValue * irpfTable[i].percent).toFixed(2))
-            : parseFloat(
-                (
-                  (newBaseValue - irpfTable[i].from) *
-                  irpfTable[i].percent
-                ).toFixed(2)
-              );
-      } else {
-        if (irpfTable[i].range === 5) {
-          discount += parseFloat(
-            ((newBaseValue - irpfTable[i].from) * irpfTable[i].percent).toFixed(2)
-          );
-        } else {
-          discount +=
-            i === 1
-              ? parseFloat((irpfTable[i].to * irpfTable[i].percent).toFixed(2))
-              : parseFloat(
-                  (
-                    (irpfTable[i].to - irpfTable[i].from) *
-                    irpfTable[i].percent
-                  ).toFixed(2)
-                );
-        }
-      }
+    // se a base nao for a primeira, precisamos subtrair o valor da base anterior
+    if (i !== 0) {
+      faixa -= arr[i - 1];
     }
-  }
 
-  discount -=
-    irpfTable[currentRange].discount -
-    numberOfDependents * discountPerDependent;
+    // bases maiores que rendimentos podem resultar em faixas negativas, por isso zeramos essas
+    faixa = Math.max(faixa, 0);
 
-  return discount < 0 ? 0 : parseFloat(discount.toFixed(2));
-};
+    return faixa;
+  });
+
+  // calcula imposto conforme a aliquota de cada faixa e soma ao valor total
+  const imposto = faixas.reduce(function (sum, f, i) {
+    // calcula imposto da faixa multiplicando sua aliquota
+    const impFaixa = f * aliquotas[i];
+    return (sum += impFaixa);
+  }, 0);
+
+  // imposto a pagar sobre rendimentos
+  return imposto;
+}
