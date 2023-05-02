@@ -7,7 +7,7 @@
 export const IRRF = (rendimentos: number): number => {
   // Fonte: https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/tributos/irpf-imposto-de-renda-pessoa-fisica#tabelas-de-incid-ncia-mensal
   const aliquotas = [0, 0.075, 0.15, 0.225, 0.275]; // aliquotas de IR
-  const bases = [1903.98, 2826.65, 3751.05, 4664.68, Infinity]; // bases de calculo
+  const bases = [2112, 2826.65, 3751.05, 4664.68, Infinity]; // bases de calculo
 
   // calcula tamanho das faixas de tributacao conforme rendimentos
   const faixas = bases.map((b, i, arr) => {
